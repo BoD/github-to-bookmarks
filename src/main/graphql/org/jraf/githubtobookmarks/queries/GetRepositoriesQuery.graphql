@@ -1,0 +1,10 @@
+query GetRepositoriesQuery($userLogin: String!) {
+    user(login: $userLogin) {
+        repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}, isFork: false, ownerAffiliations: [OWNER]) {
+            nodes {
+                name
+                url
+            }
+        }
+    }
+}

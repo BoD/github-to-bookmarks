@@ -1,0 +1,7 @@
+build
+out
+.gradle
+*.iml
+.idea/*
+!.idea/copyright
+!.idea/codeStyles
