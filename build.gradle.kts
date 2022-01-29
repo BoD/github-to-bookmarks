@@ -4,7 +4,7 @@ plugins {
     kotlin("jvm") version "1.5.31"
     id("application")
     id("com.github.ben-manes.versions").version("0.39.0")
-    id("com.apollographql.apollo3").version("3.0.0-alpha07")
+    id("com.apollographql.apollo3").version("3.0.0")
 }
 
 group = "org.jraf"
@@ -20,7 +20,7 @@ val versions = mapOf(
     "ktor" to "1.6.4",
     "logback" to "1.2.6",
     "json" to "20210307",
-    "apollo" to "3.0.0-alpha07"
+    "apollo" to "3.0.0"
 )
 
 tasks {
@@ -71,3 +71,4 @@ dependencies {
     implementation("com.apollographql.apollo3:apollo-runtime:${versions["apollo"]}")
 }
 
+// Run `./gradlew distZip` to create a zip distribution

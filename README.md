@@ -4,11 +4,9 @@ This little webapp will generate a JSON bookmarks document from a GitHub user.
 
 This is intended to be used with [bbt](https://github.com/BoD/bbt).
 
-An instance is running here: https://github-to-bookmarks.herokuapp.com/
-
 ## How to use
 
-https://<span></span>github-to-bookmarks.herokuapp.com/`AUTH_TOKEN`/`GITHUB_USER_NAME`
+https://<span></span>server/`AUTH_TOKEN`/`GITHUB_USER_NAME`
 
 
 ## Licence

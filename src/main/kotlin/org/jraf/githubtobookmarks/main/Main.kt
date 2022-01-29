@@ -26,8 +26,6 @@
 package org.jraf.githubtobookmarks.main
 
 import com.apollographql.apollo3.ApolloClient
-import com.apollographql.apollo3.api.ApolloRequest
-import com.apollographql.apollo3.api.http.withHttpHeader
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.features.DefaultHeaders
@@ -56,7 +54,7 @@ private const val APP_URL = "https://github-to-bookmarks.herokuapp.com"
 
 private val logger = LoggerFactory.getLogger("org.jraf.githubtobookmarks.main")
 private val apolloClient by lazy {
-    ApolloClient("https://api.github.com/graphql")
+    ApolloClient.Builder().serverUrl("https://api.github.com/graphql").build()
 }
 
 suspend fun main() {
@@ -86,17 +84,16 @@ suspend fun main() {
 }
 
 suspend fun fetchRepositories(token: String, userName: String): List<Bookmark> {
-    return apolloClient.query(
-        ApolloRequest(
-            GetRepositoriesQuery(userLogin = userName)
-        ).withHttpHeader("Authorization", "Bearer $token")
-    ).dataOrThrow.user!!.repositories.nodes!!.map {
-        Bookmark(
-            title = it!!.name,
-            url = it.url.toString(),
-            bookmarks = emptyList()
-        )
-    }
+    return apolloClient.query(GetRepositoriesQuery(userLogin = userName))
+        .addHttpHeader("Authorization", "Bearer $token")
+        .execute()
+        .dataAssertNoErrors.user!!.repositories.nodes!!.map {
+            Bookmark(
+                title = it!!.name,
+                url = it.url.toString(),
+                bookmarks = emptyList()
+            )
+        }
 }
 
 data class Bookmark(
