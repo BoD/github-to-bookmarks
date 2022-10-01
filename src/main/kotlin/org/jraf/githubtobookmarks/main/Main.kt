@@ -40,7 +40,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -104,7 +103,7 @@ data class Bookmark(
 
 private fun List<Bookmark>.asJsonBookmarks(): String {
     val jsonObject = buildJsonObject {
-        put("version", JsonPrimitive(1))
+        put("version", 1)
         putJsonArray("bookmarks") {
             for (bookmark in this@asJsonBookmarks) {
                 add(
