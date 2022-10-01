@@ -1,7 +1,10 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+
 plugins {
     kotlin("jvm")
     id("application")
     id("com.apollographql.apollo3")
+    id("com.bmuschko.docker-java-application")
 }
 
 group = "org.jraf"
@@ -13,7 +16,7 @@ repositories {
 }
 
 application {
-    mainClassName = "org.jraf.githubtobookmarks.main.MainKt"
+    mainClass.set("org.jraf.githubtobookmarks.main.MainKt")
 }
 
 apollo {
@@ -37,5 +40,22 @@ dependencies {
     implementation(ApolloGraphQL.runtime)
 }
 
+docker {
+    javaApplication {
+        maintainer.set("BoD <BoD@JRAF.org>")
+        ports.set(listOf(8080))
+        images.add("bodlulu/github-to-bookmarks:latest")
+    }
+    registryCredentials {
+        username.set(System.getenv("DOCKER_USERNAME"))
+        password.set(System.getenv("DOCKER_PASSWORD"))
+    }
+}
+
+tasks.withType<DockerBuildImage> {
+    platform.set("linux/amd64")
+}
+
 // `./gradlew distZip` to create a zip distribution
 // `./gradlew refreshVersions` to update dependencies
+// `DOCKER_USERNAME=<your docker hub login> DOCKER_PASSWORD=<your docker hub password> ./gradlew dockerPushImage` to build and push the image

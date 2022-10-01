@@ -46,7 +46,7 @@ import kotlinx.serialization.json.putJsonArray
 import org.jraf.githubtobookmarks.GetRepositoriesQuery
 import org.slf4j.LoggerFactory
 
-private const val DEFAULT_PORT = 8042
+private const val DEFAULT_PORT = 8080
 
 private const val ENV_PORT = "PORT"
 
