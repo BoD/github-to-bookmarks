@@ -44,7 +44,7 @@ docker {
     javaApplication {
         maintainer.set("BoD <BoD@JRAF.org>")
         ports.set(listOf(8080))
-        images.add("bodlulu/github-to-bookmarks:latest")
+        images.add("bodlulu/${rootProject.name}:latest")
     }
     registryCredentials {
         username.set(System.getenv("DOCKER_USERNAME"))

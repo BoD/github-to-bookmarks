@@ -8,7 +8,7 @@ This is intended to be used with [bbt](https://github.com/BoD/bbt).
 
 https://<span></span>server/`AUTH_TOKEN`/`GITHUB_USER_NAME`
 
-## Docker instructions:
+## Docker instructions
 
 ### Building and pushing the image to Docker Hub
 
