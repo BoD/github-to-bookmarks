@@ -42,6 +42,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.jraf.githubtobookmarks.GetRepositoriesQuery
 import org.slf4j.LoggerFactory
@@ -108,8 +109,8 @@ private fun List<Bookmark>.asJsonBookmarks(): String {
             for (bookmark in this@asJsonBookmarks) {
                 add(
                     buildJsonObject {
-                        put("title", JsonPrimitive(bookmark.title))
-                        put("url", JsonPrimitive(bookmark.url))
+                        put("title", bookmark.title)
+                        put("url", bookmark.url)
                     }
                 )
             }
