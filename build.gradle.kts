@@ -1,10 +1,7 @@
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-
 plugins {
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm")
     id("application")
-    id("com.github.ben-manes.versions").version("0.39.0")
-    id("com.apollographql.apollo3").version("3.0.0")
+    id("com.apollographql.apollo3")
 }
 
 group = "org.jraf"
@@ -13,39 +10,6 @@ version = "1.0.0"
 repositories {
     mavenLocal()
     mavenCentral()
-}
-
-val versions = mapOf(
-    "gradle" to "7.2",
-    "ktor" to "1.6.4",
-    "logback" to "1.2.6",
-    "json" to "20210307",
-    "apollo" to "3.0.0"
-)
-
-tasks {
-    compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-
-    wrapper {
-        distributionType = Wrapper.DistributionType.ALL
-        gradleVersion = versions["gradle"]
-    }
-}
-
-tasks.withType<DependencyUpdatesTask> {
-    rejectVersionIf {
-        candidate.version.contains("alpha", true)
-    }
-}
-
-tasks.register("stage") {
-    dependsOn(":installDist")
 }
 
 application {
@@ -58,17 +22,20 @@ apollo {
 
 dependencies {
     // Ktor
-    implementation("io.ktor:ktor-server-core:${versions["ktor"]}")
-    implementation("io.ktor:ktor-server-netty:${versions["ktor"]}")
+    implementation(Ktor.server.core)
+    implementation(Ktor.server.netty)
+    implementation(Ktor.server.defaultHeaders)
+    implementation(Ktor.server.statusPages)
 
     // Logback
-    runtimeOnly("ch.qos.logback:logback-classic:${versions["logback"]}")
+    runtimeOnly("ch.qos.logback:logback-classic:_")
 
     // JSON
-    implementation("org.json:json:${versions["json"]}")
+    implementation(KotlinX.serialization.json)
 
     // Apollo
-    implementation("com.apollographql.apollo3:apollo-runtime:${versions["apollo"]}")
+    implementation(ApolloGraphQL.runtime)
 }
 
-// Run `./gradlew distZip` to create a zip distribution
+// `./gradlew distZip` to create a zip distribution
+// `./gradlew refreshVersions` to update dependencies

@@ -1,1 +1,0 @@
-web: build/install/github-to-bookmarks/bin/github-to-bookmarks

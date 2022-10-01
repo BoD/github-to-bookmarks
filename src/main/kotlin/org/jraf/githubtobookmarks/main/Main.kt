@@ -26,20 +26,24 @@
 package org.jraf.githubtobookmarks.main
 
 import com.apollographql.apollo3.ApolloClient
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.features.DefaultHeaders
-import io.ktor.features.StatusPages
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.routing
+import io.ktor.server.application.call
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.defaultheaders.DefaultHeaders
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.putJsonArray
 import org.jraf.githubtobookmarks.GetRepositoriesQuery
-import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
 private const val DEFAULT_PORT = 8042
@@ -49,13 +53,9 @@ private const val ENV_PORT = "PORT"
 private const val PATH_TOKEN = "token"
 private const val PATH_GITHUB_USER_NAME = "username"
 
-private const val APP_URL = "https://github-to-bookmarks.herokuapp.com"
-
-
 private val logger = LoggerFactory.getLogger("org.jraf.githubtobookmarks.main")
-private val apolloClient by lazy {
-    ApolloClient.Builder().serverUrl("https://api.github.com/graphql").build()
-}
+private val apolloClient = ApolloClient.Builder().serverUrl("https://api.github.com/graphql").build()
+private val json = Json { prettyPrint = true }
 
 suspend fun main() {
     val listenPort = System.getenv(ENV_PORT)?.toInt() ?: DEFAULT_PORT
@@ -63,10 +63,10 @@ suspend fun main() {
         install(DefaultHeaders)
 
         install(StatusPages) {
-            status(HttpStatusCode.NotFound) {
+            status(HttpStatusCode.NotFound) { call, status ->
                 call.respondText(
-                    text = "Usage: $APP_URL/<Auth token>/<GitHub user name>\n\nSee https://github.com/BoD/github-to-bookmarks for more info.",
-                    status = it
+                    text = "Usage: ${call.request.local.scheme}://${call.request.local.host}:${call.request.local.port}/<Auth token>/<GitHub user name>\n\nSee https://github.com/BoD/github-to-bookmarks for more info.",
+                    status = status
                 )
             }
         }
@@ -76,8 +76,7 @@ suspend fun main() {
                 val token = call.parameters[PATH_TOKEN]!!
                 val userName = call.parameters[PATH_GITHUB_USER_NAME]!!
                 val jsonBookmarks = fetchRepositories(token, userName).asJsonBookmarks()
-                val jsonBookmarksWithEnvelope = """{"version": 1, ${jsonBookmarks}}"""
-                call.respondText(jsonBookmarksWithEnvelope, ContentType.Application.Json.withCharset(Charsets.UTF_8))
+                call.respondText(jsonBookmarks, ContentType.Application.Json.withCharset(Charsets.UTF_8))
             }
         }
     }.start(wait = true)
@@ -103,26 +102,18 @@ data class Bookmark(
 )
 
 private fun List<Bookmark>.asJsonBookmarks(): String {
-    var res = """
-        "bookmarks": [
-    """.trimIndent()
-    for ((i, bookmark) in this.withIndex()) {
-        res += if (bookmark.bookmarks.isEmpty() || bookmark.bookmarks.size == 1) {
-            """
-                    {
-                        "title": ${JSONObject.quote(bookmark.title)},
-                        "url": "${bookmark.url}"
-                    }${if (i == this.lastIndex) "" else ","}
-                """.trimIndent()
-        } else {
-            """
-                    {
-                        "title": ${JSONObject.quote(bookmark.title)},
-                        ${bookmark.bookmarks.asJsonBookmarks()}
-                    }${if (i == this.lastIndex) "" else ","}
-                """.trimIndent()
+    val jsonObject = buildJsonObject {
+        put("version", JsonPrimitive(1))
+        putJsonArray("bookmarks") {
+            for (bookmark in this@asJsonBookmarks) {
+                add(
+                    buildJsonObject {
+                        put("title", JsonPrimitive(bookmark.title))
+                        put("url", JsonPrimitive(bookmark.url))
+                    }
+                )
+            }
         }
     }
-    res += "]"
-    return res
+    return json.encodeToString(jsonObject)
 }
