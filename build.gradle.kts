@@ -45,6 +45,7 @@ docker {
         maintainer.set("BoD <BoD@JRAF.org>")
         ports.set(listOf(8080))
         images.add("bodlulu/${rootProject.name}:latest")
+        jvmArgs.set(listOf("-Xms16m", "-Xmx128m"))
     }
     registryCredentials {
         username.set(System.getenv("DOCKER_USERNAME"))
@@ -54,6 +55,10 @@ docker {
 
 tasks.withType<DockerBuildImage> {
     platform.set("linux/amd64")
+}
+
+tasks.withType<com.bmuschko.gradle.docker.tasks.image.Dockerfile> {
+    environmentVariable("MALLOC_ARENA_MAX", "4")
 }
 
 // `./gradlew distZip` to create a zip distribution
