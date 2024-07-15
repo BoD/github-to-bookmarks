@@ -25,7 +25,7 @@
 
 package org.jraf.githubtobookmarks.main
 
-import com.apollographql.apollo3.ApolloClient
+import com.apollographql.apollo.ApolloClient
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
@@ -58,62 +58,62 @@ private val apolloClient = ApolloClient.Builder().serverUrl("https://api.github.
 private val json = Json { prettyPrint = true }
 
 suspend fun main() {
-    val listenPort = System.getenv(ENV_PORT)?.toInt() ?: DEFAULT_PORT
-    embeddedServer(Netty, listenPort) {
-        install(DefaultHeaders)
+  val listenPort = System.getenv(ENV_PORT)?.toInt() ?: DEFAULT_PORT
+  embeddedServer(Netty, listenPort) {
+    install(DefaultHeaders)
 
-        install(StatusPages) {
-            status(HttpStatusCode.NotFound) { call, status ->
-                call.respondText(
-                    text = "Usage: ${call.request.local.scheme}://${call.request.local.host}:${call.request.local.port}/<Auth token>/<GitHub user name>\n\nSee https://github.com/BoD/github-to-bookmarks for more info.",
-                    status = status
-                )
-            }
-        }
+    install(StatusPages) {
+      status(HttpStatusCode.NotFound) { call, status ->
+        call.respondText(
+          text = "Usage: ${call.request.local.scheme}://${call.request.local.host}:${call.request.local.port}/<Auth token>/<GitHub user name>\n\nSee https://github.com/BoD/github-to-bookmarks for more info.",
+          status = status
+        )
+      }
+    }
 
-        routing {
-            get("{$PATH_TOKEN}/{$PATH_GITHUB_USER_NAME}") {
-                val token = call.parameters[PATH_TOKEN]!!
-                val userName = call.parameters[PATH_GITHUB_USER_NAME]!!
-                val jsonBookmarks = fetchRepositories(token, userName).asJsonBookmarks()
-                call.respondText(jsonBookmarks, ContentType.Application.Json.withCharset(Charsets.UTF_8))
-            }
-        }
-    }.start(wait = true)
+    routing {
+      get("{$PATH_TOKEN}/{$PATH_GITHUB_USER_NAME}") {
+        val token = call.parameters[PATH_TOKEN]!!
+        val userName = call.parameters[PATH_GITHUB_USER_NAME]!!
+        val jsonBookmarks = fetchRepositories(token, userName).asJsonBookmarks()
+        call.respondText(jsonBookmarks, ContentType.Application.Json.withCharset(Charsets.UTF_8))
+      }
+    }
+  }.start(wait = true)
 }
 
 suspend fun fetchRepositories(token: String, userName: String): List<Bookmark> {
-    return apolloClient.query(GetRepositoriesQuery(userLogin = userName))
-        .addHttpHeader("Authorization", "Bearer $token")
-        .execute()
-        .dataAssertNoErrors.user!!.repositories.nodes!!.map {
-            Bookmark(
-                title = it!!.name,
-                url = it.url.toString(),
-                bookmarks = emptyList()
-            )
-        }
+  return apolloClient.query(GetRepositoriesQuery(userLogin = userName))
+    .addHttpHeader("Authorization", "Bearer $token")
+    .execute()
+    .dataAssertNoErrors.user!!.repositories.nodes!!.map {
+      Bookmark(
+        title = it!!.name,
+        url = it.url.toString(),
+        bookmarks = emptyList()
+      )
+    }
 }
 
 data class Bookmark(
-    val title: String,
-    val url: String,
-    val bookmarks: List<Bookmark>,
+  val title: String,
+  val url: String,
+  val bookmarks: List<Bookmark>,
 )
 
 private fun List<Bookmark>.asJsonBookmarks(): String {
-    val jsonObject = buildJsonObject {
-        put("version", 1)
-        putJsonArray("bookmarks") {
-            for (bookmark in this@asJsonBookmarks) {
-                add(
-                    buildJsonObject {
-                        put("title", bookmark.title)
-                        put("url", bookmark.url)
-                    }
-                )
-            }
-        }
+  val jsonObject = buildJsonObject {
+    put("version", 1)
+    putJsonArray("bookmarks") {
+      for (bookmark in this@asJsonBookmarks) {
+        add(
+          buildJsonObject {
+            put("title", bookmark.title)
+            put("url", bookmark.url)
+          }
+        )
+      }
     }
-    return json.encodeToString(jsonObject)
+  }
+  return json.encodeToString(jsonObject)
 }

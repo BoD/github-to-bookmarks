@@ -5,3 +5,4 @@ out
 .idea/*
 !.idea/copyright
 !.idea/codeStyles
+build.properties
