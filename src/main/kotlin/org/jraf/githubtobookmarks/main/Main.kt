@@ -29,7 +29,6 @@ import com.apollographql.apollo.ApolloClient
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -44,7 +43,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.jraf.githubtobookmarks.GetRepositoriesQuery
-import org.slf4j.LoggerFactory
+import org.slf4j.simple.SimpleLogger
 
 private const val DEFAULT_PORT = 8080
 
@@ -53,11 +52,16 @@ private const val ENV_PORT = "PORT"
 private const val PATH_TOKEN = "token"
 private const val PATH_GITHUB_USER_NAME = "username"
 
-private val logger = LoggerFactory.getLogger("org.jraf.githubtobookmarks.main")
 private val apolloClient = ApolloClient.Builder().serverUrl("https://api.github.com/graphql").build()
 private val json = Json { prettyPrint = true }
 
 suspend fun main() {
+  // This must be done before any logger is initialized
+  System.setProperty(SimpleLogger.LOG_FILE_KEY, "System.out")
+  System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "trace")
+  System.setProperty(SimpleLogger.SHOW_DATE_TIME_KEY, "true")
+  System.setProperty(SimpleLogger.DATE_TIME_FORMAT_KEY, "yyyy-MM-dd HH:mm:ss")
+
   val listenPort = System.getenv(ENV_PORT)?.toInt() ?: DEFAULT_PORT
   embeddedServer(Netty, listenPort) {
     install(DefaultHeaders)
@@ -65,8 +69,8 @@ suspend fun main() {
     install(StatusPages) {
       status(HttpStatusCode.NotFound) { call, status ->
         call.respondText(
-          text = "Usage: ${call.request.local.scheme}://${call.request.local.host}:${call.request.local.port}/<Auth token>/<GitHub user name>\n\nSee https://github.com/BoD/github-to-bookmarks for more info.",
-          status = status
+          text = "Usage: ${call.request.local.scheme}://${call.request.local.serverHost}:${call.request.local.serverPort}/<Auth token>/<GitHub user name>\n\nSee https://github.com/BoD/github-to-bookmarks for more info.",
+          status = status,
         )
       }
     }
@@ -90,7 +94,7 @@ suspend fun fetchRepositories(token: String, userName: String): List<Bookmark> {
       Bookmark(
         title = it!!.name,
         url = it.url.toString(),
-        bookmarks = emptyList()
+        bookmarks = emptyList(),
       )
     }
 }
@@ -110,7 +114,7 @@ private fun List<Bookmark>.asJsonBookmarks(): String {
           buildJsonObject {
             put("title", bookmark.title)
             put("url", bookmark.url)
-          }
+          },
         )
       }
     }
