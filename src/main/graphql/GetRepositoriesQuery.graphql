@@ -1,10 +1,18 @@
-query GetRepositoriesQuery($userLogin: String!) {
-    user(login: $userLogin) {
-        repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}, isFork: false, ownerAffiliations: [OWNER]) {
-            nodes {
-                name
-                url
-            }
-        }
+query GetRepositoriesQuery($name: String!) {
+  user(login: $name) {
+    ...Repositories
+  }
+
+  organization(login: $name) {
+    ...Repositories
+  }
+}
+
+fragment Repositories on RepositoryOwner {
+  repositories(first: 100, orderBy: {field: PUSHED_AT, direction: DESC}, isFork: false, ownerAffiliations: [OWNER]) {
+    nodes {
+      name
+      url
     }
+  }
 }

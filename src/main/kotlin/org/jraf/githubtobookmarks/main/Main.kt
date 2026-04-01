@@ -37,7 +37,6 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -78,25 +77,38 @@ suspend fun main() {
     routing {
       get("{$PATH_TOKEN}/{$PATH_GITHUB_USER_NAME}") {
         val token = call.parameters[PATH_TOKEN]!!
-        val userName = call.parameters[PATH_GITHUB_USER_NAME]!!
-        val jsonBookmarks = fetchRepositories(token, userName).asJsonBookmarks()
+        val name = call.parameters[PATH_GITHUB_USER_NAME]!!
+        val jsonBookmarks = fetchRepositories(token, name).asJsonBookmarks()
         call.respondText(jsonBookmarks, ContentType.Application.Json.withCharset(Charsets.UTF_8))
       }
     }
   }.start(wait = true)
 }
 
-suspend fun fetchRepositories(token: String, userName: String): List<Bookmark> {
-  return apolloClient.query(GetRepositoriesQuery(userLogin = userName))
+suspend fun fetchRepositories(token: String, name: String): List<Bookmark> {
+  val data = apolloClient.query(GetRepositoriesQuery(name = name))
     .addHttpHeader("Authorization", "Bearer $token")
     .execute()
-    .dataAssertNoErrors.user!!.repositories.nodes!!.map {
+    .data!!
+  return if (data.user != null) {
+    data.user.repositories.repositories.nodes!!.map {
       Bookmark(
         title = it!!.name,
         url = it.url.toString(),
         bookmarks = emptyList(),
       )
     }
+  } else if (data.organization != null) {
+    data.organization.repositories.repositories.nodes!!.map {
+      Bookmark(
+        title = it!!.name,
+        url = it.url.toString(),
+        bookmarks = emptyList(),
+      )
+    }
+  } else {
+    error("Neither user nor organization found for name '$name'")
+  }
 }
 
 data class Bookmark(

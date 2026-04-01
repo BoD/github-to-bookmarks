@@ -1,6 +1,7 @@
 build
 out
 .gradle
+.kotlin
 *.iml
 .idea/*
 !.idea/copyright
