@@ -54,7 +54,7 @@ private const val PATH_GITHUB_USER_NAME = "username"
 private val apolloClient = ApolloClient.Builder().serverUrl("https://api.github.com/graphql").build()
 private val json = Json { prettyPrint = true }
 
-suspend fun main() {
+fun main() {
   // This must be done before any logger is initialized
   System.setProperty(SimpleLogger.LOG_FILE_KEY, "System.out")
   System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "trace")
@@ -121,11 +121,11 @@ private fun List<Bookmark>.asJsonBookmarks(): String {
   val jsonObject = buildJsonObject {
     put("version", 1)
     putJsonArray("bookmarks") {
-      for (bookmark in this@asJsonBookmarks) {
+      for ((title, url) in this@asJsonBookmarks) {
         add(
           buildJsonObject {
-            put("title", bookmark.title)
-            put("url", bookmark.url)
+            put("title", title)
+            put("url", url)
           },
         )
       }

@@ -1,45 +1,23 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile.CopyFileInstruction
-import java.io.FileInputStream
-import java.util.Properties
 
 plugins {
-  kotlin("jvm")
+  alias(libs.plugins.kotlin.jvm)
   id("application")
-  id("com.apollographql.apollo")
-  id("com.bmuschko.docker-java-application")
+  alias(libs.plugins.apollo)
+  alias(libs.plugins.dockerJavaApplication)
 }
 
 group = "org.jraf"
 version = "1.0.0"
 
 kotlin {
-  jvmToolchain(11)
+  jvmToolchain(25)
 }
 
 application {
   mainClass.set("org.jraf.githubtobookmarks.main.MainKt")
-}
-
-// Build properties
-ext["buildProperties"] = loadPropertiesFromFile("build.properties")
-fun Project.loadPropertiesFromFile(fileName: String): Properties {
-  val file = file(fileName)
-  if (!file.exists()) {
-    logger.warn("$fileName file does not exist: creating it now - please check its values")
-    copy {
-      from("${fileName}.SAMPLE")
-      into(project.projectDir)
-      rename { fileName }
-    }
-  }
-  val res = Properties()
-  val fileInputStream = FileInputStream(file)
-  fileInputStream.use {
-    res.load(it)
-  }
-  return res
 }
 
 apollo {
@@ -49,33 +27,30 @@ apollo {
     introspection {
       endpointUrl.set("https://api.github.com/graphql")
       schemaFile.set(file("src/main/graphql/schema.graphqls"))
-      val githubOauthKey = (rootProject.ext["buildProperties"] as Properties)["githubOauthKey"]
-      headers.put("Authorization", "Bearer $githubOauthKey")
+      headers.put("Authorization", "Bearer ${project.findProperty("githubOauthKey")}")
     }
   }
 }
 
 dependencies {
   // Ktor
-  implementation(Ktor.server.core)
-  implementation(Ktor.server.netty)
-  implementation(Ktor.server.defaultHeaders)
-  implementation(Ktor.server.statusPages)
+  implementation(libs.ktor.server.core)
+  implementation(libs.ktor.server.netty)
+  implementation(libs.ktor.server.defaultHeaders)
+  implementation(libs.ktor.server.statusPages)
 
-  implementation("org.slf4j:slf4j-simple:_")
+  implementation(libs.slf4j.simple)
 
   // JSON
-  implementation(KotlinX.serialization.json)
+  implementation(libs.kotlinx.serialization.json)
 
   // Apollo
-  // implementation(ApolloGraphQL.runtime) // <- points to v3, see https://github.com/Splitties/refreshVersions/issues/722
-  implementation("com.apollographql.apollo:apollo-runtime:_")
+  implementation(libs.apollo.runtime)
 }
 
 docker {
   javaApplication {
-    // Use OpenJ9 instead of the default one
-    baseImage.set("adoptopenjdk/openjdk11-openj9:x86_64-ubuntu-jre-11.0.26_4_openj9-0.49.0")
+    baseImage.set("eclipse-temurin:25")
     maintainer.set("BoD <BoD@JRAF.org>")
     ports.set(listOf(8080))
     images.add("bodlulu/${rootProject.name.lowercase()}:latest")
@@ -92,6 +67,24 @@ tasks.withType<DockerBuildImage> {
 }
 
 tasks.withType<Dockerfile> {
+  // Install curl
+  runCommand("apt-get update")
+  runCommand("apt-get install -y curl")
+
+  // Download the OpenTelemetry Java agent
+  runCommand("curl -L -O https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar")
+
+  // OpenTelemetry Java agent configuration
+  environmentVariable(
+    mapOf(
+      "JAVA_TOOL_OPTIONS" to "-javaagent:opentelemetry-javaagent.jar",
+      "OTEL_LOGS_EXPORTER" to "none",
+      "OTEL_METRICS_EXPORTER" to "none",
+      "OTEL_TRACES_EXPORTER" to "otlp",
+      "OTEL_SERVICE_NAME" to rootProject.name.lowercase(),
+    )
+  )
+
   // Move the COPY instructions to the end
   // See https://github.com/bmuschko/gradle-docker-plugin/issues/1093
   instructions.set(

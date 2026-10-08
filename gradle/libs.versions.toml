@@ -1,0 +1,21 @@
+[versions]
+kotlin = "2.4.21"
+ktor = "3.6.0"
+kotlinx-serialization = "1.11.0"
+apollo = "5.2.0"
+slf4j = "2.0.20"
+dockerJavaApplication = "10.0.0"
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
+dockerJavaApplication = { id = "com.bmuschko.docker-java-application", version.ref = "dockerJavaApplication" }
+
+[libraries]
+ktor-server-core = { group = "io.ktor", name = "ktor-server-core", version.ref = "ktor" }
+ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty", version.ref = "ktor" }
+ktor-server-defaultHeaders = { group = "io.ktor", name = "ktor-server-default-headers", version.ref = "ktor" }
+ktor-server-statusPages = { group = "io.ktor", name = "ktor-server-status-pages", version.ref = "ktor" }
+slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
