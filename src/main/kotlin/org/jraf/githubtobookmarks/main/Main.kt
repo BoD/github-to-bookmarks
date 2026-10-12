@@ -42,7 +42,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.jraf.githubtobookmarks.GetRepositoriesQuery
-import org.slf4j.simple.SimpleLogger
+import org.jraf.klibnanolog.logd
 
 private const val DEFAULT_PORT = 8080
 
@@ -55,12 +55,7 @@ private val apolloClient = ApolloClient.Builder().serverUrl("https://api.github.
 private val json = Json { prettyPrint = true }
 
 fun main() {
-  // This must be done before any logger is initialized
-  System.setProperty(SimpleLogger.LOG_FILE_KEY, "System.out")
-  System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "trace")
-  System.setProperty(SimpleLogger.SHOW_DATE_TIME_KEY, "true")
-  System.setProperty(SimpleLogger.DATE_TIME_FORMAT_KEY, "yyyy-MM-dd HH:mm:ss")
-
+  logd("Hello, World!")
   val listenPort = System.getenv(ENV_PORT)?.toInt() ?: DEFAULT_PORT
   embeddedServer(Netty, listenPort) {
     install(DefaultHeaders)

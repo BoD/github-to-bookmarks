@@ -39,7 +39,9 @@ dependencies {
   implementation(libs.ktor.server.defaultHeaders)
   implementation(libs.ktor.server.statusPages)
 
-  implementation(libs.slf4j.simple)
+  // Logging
+  implementation(libs.klibnanolog)
+  implementation(libs.logback)
 
   // JSON
   implementation(libs.kotlinx.serialization.json)
