@@ -78,9 +78,6 @@ tasks.withType<Dockerfile> {
   environmentVariable(
     mapOf(
       "JAVA_TOOL_OPTIONS" to "-javaagent:opentelemetry-javaagent.jar",
-      "OTEL_LOGS_EXPORTER" to "none",
-      "OTEL_METRICS_EXPORTER" to "none",
-      "OTEL_TRACES_EXPORTER" to "otlp",
       "OTEL_SERVICE_NAME" to rootProject.name.lowercase(),
     )
   )
